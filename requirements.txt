@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+yt-dlp
+openai-whisper
+googletrans==4.0.0-rc1
+gTTS
+ffmpeg-python
+python-multipart
+python-dotenv
+requests
+moviepy==1.0.3
+playwright
+deep-translator
+edge-tts
