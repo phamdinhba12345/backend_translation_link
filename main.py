@@ -111,10 +111,16 @@ def start_cleanup_thread():
 # Gọi luôn hàm này để thread chạy nền (hoạt động tốt với Gunicorn)
 start_cleanup_thread()
 
-# Tải model Whisper 1 lần khi khởi động server (model "small": cân bằng tốc độ/độ chính xác)
-print("Đang tải model nhận diện giọng nói (lần đầu có thể mất vài phút)...")
-model = WhisperModel("small", device="cpu", compute_type="int8")
-print("Model đã sẵn sàng! Server đang chạy tại http://127.0.0.1:5000")
+# Lazy load model Whisper để tránh chặn Gunicorn boot quá lâu trên Render
+model = None
+
+def get_whisper_model():
+    global model
+    if model is None:
+        print("Đang tải model nhận diện giọng nói (lần đầu có thể mất vài phút)...")
+        model = WhisperModel("small", device="cpu", compute_type="int8")
+        print("Model đã sẵn sàng!")
+    return model
 
 # Danh sách ngôn ngữ gợi ý cho dropdown (người dùng vẫn có thể gõ mã ngôn ngữ khác)
 LANG_OPTIONS = [
@@ -431,7 +437,8 @@ def download_video(url: str, out_dir: str) -> str:
 
 def transcribe(video_path: str):
     """Nhận diện giọng nói trực tiếp từ file video, trả về (văn bản gốc, mã ngôn ngữ, danh sách segment có timestamp)."""
-    segments, info = model.transcribe(video_path, beam_size=5)
+    m = get_whisper_model()
+    segments, info = m.transcribe(video_path, beam_size=5)
     segments = list(segments)
     full_text = " ".join(seg.text.strip() for seg in segments)
     return full_text.strip(), info.language, segments
