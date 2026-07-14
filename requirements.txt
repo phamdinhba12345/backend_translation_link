@@ -12,3 +12,4 @@ moviepy==1.0.3
 playwright
 deep-translator
 edge-tts
+gunicorn

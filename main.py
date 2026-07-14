@@ -108,6 +108,9 @@ def start_cleanup_thread():
         f"quét mỗi {OUTPUT_CLEANUP_INTERVAL_SECONDS}s."
     )
 
+# Gọi luôn hàm này để thread chạy nền (hoạt động tốt với Gunicorn)
+start_cleanup_thread()
+
 # Tải model Whisper 1 lần khi khởi động server (model "small": cân bằng tốc độ/độ chính xác)
 print("Đang tải model nhận diện giọng nói (lần đầu có thể mất vài phút)...")
 model = WhisperModel("small", device="cpu", compute_type="int8")
@@ -916,5 +919,5 @@ def translate_endpoint():
 
 
 if __name__ == "__main__":
-    start_cleanup_thread()
-    app.run(host="127.0.0.1", port=5000, debug=False)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)

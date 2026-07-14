@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+.env
+downloads/
+dubbed_outputs/
+temp/
+*.mp4
+*.mp3
+.git/
