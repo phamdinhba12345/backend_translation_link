@@ -470,8 +470,10 @@ def _translate_one_chunk(text: str, source_lang: str, target_lang: str) -> str:
 
     google_error = None
     try:
-        result = GoogleTranslator(source=source_lang or "auto", target=target_lang).translate(text)
-        if result and result.strip() and result.strip().lower() != text.lower():
+        # Dùng "auto" để Google tự phát hiện, tránh lỗi LanguageNotSupported 
+        # và KHÔNG bỏ qua kết quả nếu result giống text gốc (vì có thể đang dịch cùng một ngôn ngữ)
+        result = GoogleTranslator(source="auto", target=target_lang).translate(text)
+        if result and result.strip():
             return result
     except Exception as e:
         google_error = e
@@ -787,7 +789,17 @@ def translate_endpoint():
         translated_text = translate_text(full_text, target_lang, source_lang=detected_lang)
 
         warning = None
-        if full_text.strip() and translated_text.strip().lower() == full_text.strip().lower():
+        
+        # Chỉ cảnh báo nếu văn bản kết quả giống y hệt văn bản gốc, VÀ ngôn ngữ đích khác với ngôn ngữ nguồn
+        normalized_source = normalize_source_lang(detected_lang) or ""
+        is_same_lang = False
+        if normalized_source and target_lang:
+            src_prefix = normalized_source.lower()[:2]
+            tgt_prefix = target_lang.lower()[:2]
+            if src_prefix == tgt_prefix:
+                is_same_lang = True
+
+        if full_text.strip() and translated_text.strip().lower() == full_text.strip().lower() and not is_same_lang:
             warning = (
                 "Không dịch được văn bản (cả Google Translate và MyMemory đều thất bại). "
                 "Có thể do mất mạng hoặc bị chặn tạm thời. Hãy thử lại sau ít phút."
